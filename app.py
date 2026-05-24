@@ -11,19 +11,18 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-api_key = st.secrets["GROQ_API_KEY"]
-
 
 ##Arxiv and wikipedia tools
-arxiv_wrapper=ArxivAPIWrapper(top_k_results=1,doc_content_chars_max=200)
-arxiv=ArxivQueryRun(api_wrapper=arxiv_wrapper)
+arxiv_wrapper = ArxivAPIWrapper(top_k_results=1, doc_content_chars_max=200)
+arxiv = ArxivQueryRun(api_wrapper=arxiv_wrapper)
 
-wiki_wrapper=WikipediaAPIWrapper(top_k_results=1,doc_content_chars_max=200)
-wiki=WikipediaQueryRun(api_wrapper=wiki_wrapper)
+wiki_wrapper = WikipediaAPIWrapper(top_k_results=1, doc_content_chars_max=200)
+wiki = WikipediaQueryRun(api_wrapper=wiki_wrapper)
 
-search=DuckDuckGoSearchRun(name="search")
+search = DuckDuckGoSearchRun(name="search")
 
 st.title("LangChain-Chat with search")
+
 """
 In this example,we are using 'StreamlitCallbackHandler' to display the thoughts and actions 
 """
@@ -31,28 +30,68 @@ In this example,we are using 'StreamlitCallbackHandler' to display the thoughts 
 
 ##sidebar for settings
 st.sidebar.title("Settings")
-api_key=st.sidebar.text_input("Enter your Groq API Key:",type="password")
+
+api_key = st.sidebar.text_input(
+    "Enter your Groq API Key:",
+    type="password"
+)
 
 if "messages" not in st.session_state:
-    st.session_state["messages"]=[
-        {"role":"assistant","content":"Hi,I am a chatbot who can search web.How can i help you"}
+    st.session_state["messages"] = [
+        {
+            "role": "assistant",
+            "content": "Hi,I am a chatbot who can search web.How can i help you"
+        }
     ]
 
 for msg in st.session_state.messages:
     st.chat_message(msg["role"]).write(msg["content"])
 
 
-if prompt:=st.chat_input(placeholder="Search") :
-    st.session_state.messages.append({"role":"user","content":prompt})
+if prompt := st.chat_input(placeholder="Search"):
+
+    if not api_key:
+        st.warning("Please enter your Groq API Key")
+        st.stop()
+
+    st.session_state.messages.append(
+        {
+            "role": "user",
+            "content": prompt
+        }
+    )
+
     st.chat_message("user").write(prompt)
 
-    llm=ChatGroq(groq_api_key=api_key,model_name="llama3-8b-8192",streaming=True)
-    tools=[search,arxiv,wiki]
+    llm = ChatGroq(
+        groq_api_key=api_key,
+        model_name="llama3-70b-8192",
+        temperature=0
+    )
 
+    tools = [search, arxiv, wiki]
 
-    search_agent=initialize_agent(tools,llm,agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,handle_parsing_errors=True)
+    search_agent = initialize_agent(
+        tools,
+        llm,
+        agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+        handle_parsing_errors=True
+    )
+
     with st.chat_message("assistant"):
-        st_cb=StreamlitCallbackHandler(st.container(),expand_new_thoughts=False)
-        response=search_agent.run(prompt,callbacks=[st_cb])
-        st.session_state.messages.append({"role":"assistant","content":response})
+
+        st_cb = StreamlitCallbackHandler(
+            st.container(),
+            expand_new_thoughts=False
+        )
+
+        response = search_agent.run(prompt)
+
+        st.session_state.messages.append(
+            {
+                "role": "assistant",
+                "content": response
+            }
+        )
+
         st.write(response)

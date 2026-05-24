@@ -1,11 +1,13 @@
 import streamlit as st
 from langchain_groq import ChatGroq
 from langchain_community.utilities import ArxivAPIWrapper, WikipediaAPIWrapper
-from langchain_community.tools import ArxivQueryRun, WikipediaQueryRun, DuckDuckGoSearchRun
+from langchain_community.tools import ArxivQueryRun, WikipediaQueryRun
+from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain.agents import initialize_agent
 from langchain.agents.agent_types import AgentType
 from langchain.callbacks import StreamlitCallbackHandler
 from dotenv import load_dotenv
+import os
 
 load_dotenv()
 
@@ -16,8 +18,6 @@ arxiv = ArxivQueryRun(api_wrapper=arxiv_wrapper)
 wiki_wrapper = WikipediaAPIWrapper(top_k_results=1, doc_content_chars_max=200)
 wiki = WikipediaQueryRun(api_wrapper=wiki_wrapper)
 
-search = DuckDuckGoSearchRun(name="search", backend="lite")  # ✅ fixes rate limit
-
 # UI
 st.title("LangChain - Chat with Search")
 st.caption("A chatbot that can search the web, Wikipedia, and Arxiv")
@@ -25,6 +25,7 @@ st.caption("A chatbot that can search the web, Wikipedia, and Arxiv")
 # Sidebar
 st.sidebar.title("Settings")
 api_key = st.sidebar.text_input("Enter your Groq API Key:", type="password")
+tavily_api_key = st.sidebar.text_input("Enter your Tavily API Key:", type="password")  # ✅
 
 # Chat history
 if "messages" not in st.session_state:
@@ -41,6 +42,14 @@ if prompt := st.chat_input(placeholder="Ask me anything..."):
     if not api_key:
         st.warning("⚠️ Please enter your Groq API Key in the sidebar.")
         st.stop()
+
+    if not tavily_api_key:
+        st.warning("⚠️ Please enter your Tavily API Key in the sidebar.")
+        st.stop()
+
+    os.environ["TAVILY_API_KEY"] = tavily_api_key  # ✅ set before using
+
+    search = TavilySearchResults(max_results=2)  # ✅ replaces DuckDuckGo
 
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.chat_message("user").write(prompt)

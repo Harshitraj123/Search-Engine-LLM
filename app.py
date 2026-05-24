@@ -16,7 +16,7 @@ arxiv = ArxivQueryRun(api_wrapper=arxiv_wrapper)
 wiki_wrapper = WikipediaAPIWrapper(top_k_results=1, doc_content_chars_max=200)
 wiki = WikipediaQueryRun(api_wrapper=wiki_wrapper)
 
-search = DuckDuckGoSearchRun(name="search")
+search = DuckDuckGoSearchRun(name="search", backend="lite")  # ✅ fixes rate limit
 
 # UI
 st.title("LangChain - Chat with Search")

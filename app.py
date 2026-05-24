@@ -67,10 +67,6 @@ if prompt := st.chat_input(placeholder="Ask me anything..."):
             expand_new_thoughts=False
         )
 
-        try:
-            response = search_agent.run(prompt, callbacks=[st_cb])  # ✅ callbacks passed
-            st.session_state.messages.append({"role": "assistant", "content": response})
-            st.write(response)
-
-        except Exception as e:
-            st.error(f"❌ Error: {str(e)}")  # ✅ shows real error instead of redacted one
+        response = search_agent.run(prompt, callbacks=[st_cb])
+        st.session_state.messages.append({"role": "assistant", "content": response})
+        st.write(response)

@@ -64,10 +64,10 @@ if prompt := st.chat_input(placeholder="Search"):
     st.chat_message("user").write(prompt)
 
     llm = ChatGroq(
-        groq_api_key=api_key,
-        model_name="mixtral-8x7b-32768",
-        temperature=0
-    )
+    groq_api_key=api_key,
+    model_name="llama3-8b-8192",   
+    temperature=0
+)
 
     tools = [search, arxiv, wiki]
 
@@ -85,8 +85,7 @@ if prompt := st.chat_input(placeholder="Search"):
             expand_new_thoughts=False
         )
 
-        response = search_agent.run(prompt)
-
+        response = search_agent.run(prompt, callbacks=[st_cb])  
         st.session_state.messages.append(
             {
                 "role": "assistant",

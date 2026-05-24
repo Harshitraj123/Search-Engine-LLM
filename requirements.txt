@@ -6,7 +6,7 @@ python-dotenv
 
 duckduckgo-search==5.3.1b1
 wikipedia
-arxiv
+arxiv==1.4.8
 
 pypdf
 pymupdf

@@ -6,13 +6,10 @@ from langchain.agents import initialize_agent
 from langchain.agents.agent_types import AgentType
 from langchain.callbacks import StreamlitCallbackHandler
 from dotenv import load_dotenv
-import os
 
-from dotenv import load_dotenv
 load_dotenv()
 
-
-##Arxiv and wikipedia tools
+# Tools
 arxiv_wrapper = ArxivAPIWrapper(top_k_results=1, doc_content_chars_max=200)
 arxiv = ArxivQueryRun(api_wrapper=arxiv_wrapper)
 
@@ -21,53 +18,39 @@ wiki = WikipediaQueryRun(api_wrapper=wiki_wrapper)
 
 search = DuckDuckGoSearchRun(name="search")
 
-st.title("LangChain-Chat with search")
+# UI
+st.title("LangChain - Chat with Search")
+st.caption("A chatbot that can search the web, Wikipedia, and Arxiv")
 
-"""
-In this example,we are using 'StreamlitCallbackHandler' to display the thoughts and actions 
-"""
-
-
-##sidebar for settings
+# Sidebar
 st.sidebar.title("Settings")
+api_key = st.sidebar.text_input("Enter your Groq API Key:", type="password")
 
-api_key = st.sidebar.text_input(
-    "Enter your Groq API Key:",
-    type="password"
-)
-
+# Chat history
 if "messages" not in st.session_state:
     st.session_state["messages"] = [
-        {
-            "role": "assistant",
-            "content": "Hi,I am a chatbot who can search web.How can i help you"
-        }
+        {"role": "assistant", "content": "Hi! I'm a chatbot who can search the web. How can I help you?"}
     ]
 
 for msg in st.session_state.messages:
     st.chat_message(msg["role"]).write(msg["content"])
 
-
-if prompt := st.chat_input(placeholder="Search"):
+# Chat input
+if prompt := st.chat_input(placeholder="Ask me anything..."):
 
     if not api_key:
-        st.warning("Please enter your Groq API Key")
+        st.warning("⚠️ Please enter your Groq API Key in the sidebar.")
         st.stop()
 
-    st.session_state.messages.append(
-        {
-            "role": "user",
-            "content": prompt
-        }
-    )
-
+    st.session_state.messages.append({"role": "user", "content": prompt})
     st.chat_message("user").write(prompt)
 
     llm = ChatGroq(
-    groq_api_key=api_key,
-    model_name="llama3-8b-8192",   
-    temperature=0
-)
+        groq_api_key=api_key,
+        model_name="llama3-70b-8192",  # ✅ updated model
+        temperature=0,
+        streaming=True
+    )
 
     tools = [search, arxiv, wiki]
 
@@ -79,18 +62,15 @@ if prompt := st.chat_input(placeholder="Search"):
     )
 
     with st.chat_message("assistant"):
-
         st_cb = StreamlitCallbackHandler(
             st.container(),
             expand_new_thoughts=False
         )
 
-        response = search_agent.run(prompt, callbacks=[st_cb])  
-        st.session_state.messages.append(
-            {
-                "role": "assistant",
-                "content": response
-            }
-        )
+        try:
+            response = search_agent.run(prompt, callbacks=[st_cb])  # ✅ callbacks passed
+            st.session_state.messages.append({"role": "assistant", "content": response})
+            st.write(response)
 
-        st.write(response)
+        except Exception as e:
+            st.error(f"❌ Error: {str(e)}")  # ✅ shows real error instead of redacted one

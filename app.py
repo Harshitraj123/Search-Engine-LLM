@@ -47,7 +47,7 @@ if prompt := st.chat_input(placeholder="Ask me anything..."):
 
     llm = ChatGroq(
         groq_api_key=api_key,
-        model_name="llama3-70b-8192",  # ✅ updated model
+        model_name="llama-3.3-70b-versatile",
         temperature=0,
         streaming=True
     )

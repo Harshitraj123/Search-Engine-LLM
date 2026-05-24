@@ -12,9 +12,6 @@ import os
 load_dotenv()
 
 # Tools
-arxiv_wrapper = ArxivAPIWrapper(top_k_results=1, doc_content_chars_max=200)
-arxiv = ArxivQueryRun(api_wrapper=arxiv_wrapper)
-
 wiki_wrapper = WikipediaAPIWrapper(top_k_results=1, doc_content_chars_max=200)
 wiki = WikipediaQueryRun(api_wrapper=wiki_wrapper)
 
@@ -61,7 +58,7 @@ if prompt := st.chat_input(placeholder="Ask me anything..."):
         streaming=True
     )
 
-    tools = [search, arxiv, wiki]
+    tools = [search,  wiki]
 
     search_agent = initialize_agent(
         tools,
